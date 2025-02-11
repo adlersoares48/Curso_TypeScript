@@ -171,3 +171,116 @@ class ID {
 const newItem = new ID("1")
 console.log(newItem)
 console.log(newItem.id)
+
+// 7 - EXEMPLO CLASS DECORATOR ----------------------------------------------------------------------------------------------------------------------
+function createdDate(created: Function) {
+    created.prototype.createdAt = new Date()
+}
+
+@createdDate
+class Book {
+    id
+    createdAt?: Date
+
+    constructor(id: number){
+        this.id = id
+    }
+}
+
+@createdDate
+class Pen {
+    id
+    createdAt?: Date
+
+    constructor(id: number){
+        this.id = id
+    }
+}
+
+const newBook = new Book(12)
+const newPen = new Pen(55)
+
+console.log(newBook.createdAt)
+console.log(newPen.createdAt)
+
+// 8 - EXEMPLO METHOD DECORATORS ----------------------------------------------------------------------------------------------------------------------
+function checkIfUserPosted(){
+    return function(
+        target: Object,
+        key: string | Symbol,
+        descriptor: PropertyDescriptor
+    ) {
+        const childFunction = descriptor.value
+        // console.log(childFunction)
+        descriptor.value = function(...args: any[]) {
+            if(args[1] === true){
+                console.log("Usuário já postou!")
+                return null
+            } else {
+                return childFunction.apply(this, args)
+            }
+        }
+
+        return descriptor
+    }
+}
+
+
+
+class Post {
+    alreadyPosted = false
+
+    @checkIfUserPosted()
+    
+    post(content: string, alreadyPosted: boolean){
+        this.alreadyPosted = true
+        console.log(`Post do usuário: ${content}`)
+    }
+}
+
+const newPost = new Post()
+
+newPost.post("Meu primeiro post!", newPost.alreadyPosted)
+newPost.post("Meu segundo post!", newPost.alreadyPosted)
+newPost.post("Meu terceiro post!", newPost.alreadyPosted)
+
+
+// 9 - EXEMPLO PROPERTY DECORATORS ----------------------------------------------------------------------------------------------------------------------
+function Max(limit: number){
+    return function(target: Object, propertyKey: string) {
+
+        let value: string
+
+        const getter = function(){
+            return value
+        }
+
+        const setter = function(newVal: string) {
+            if(newVal.length > limit){
+                console.log(`O valor deve ter no máximo ${limit} digitos`)
+                return
+            } else {
+                value = newVal
+            }
+        }
+
+        Object.defineProperty(target, propertyKey, {
+            get: getter,
+            set: setter
+        })
+    }
+}
+
+
+class Admin {
+    @Max(10)
+    username
+
+    constructor(username: string){
+        this.username = username
+    }
+}
+
+const pedro = new Admin("pedroadmin12345")
+const lee = new Admin("lee")
+console.log(lee)
